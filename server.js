@@ -44,7 +44,7 @@ app.use(express.json({ limit: '100mb' }));
 app.use(cookieParser());
 app.use(
   cors({
-    origin: ['http://localhost:5173', 'https://yesgobus.com', 'https://yesgobus.netlify.app', 'https://localhost', 'http://192.168.1.101:5173', 'http://localhost'],
+    origin: ['http://localhost:5173', 'https://yesgobus.com','https://yegobus-web.onrender.com', 'https://yesgobus.netlify.app', 'https://localhost', 'http://192.168.1.101:5173', 'http://localhost'],
     credentials: true,
   })
 );
