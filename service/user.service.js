@@ -1,5 +1,5 @@
 import User from "../modals/user.modal.js";
-import bcrypt from "bcrypt";
+//import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { generateRandomNumber } from "../utils/generateRandomNumber.js";
 import Agent from "../modals/agents.modal.js";
@@ -7,9 +7,20 @@ import axios from "axios";
 
 export const signUp = async (userData) => {
   try {
-    const existingUser = await User.findOne({
-      $or: [{ email: userData.email }, { phoneNumber: userData.phoneNumber }]
-    });
+    const existingUser = await User.findOne({ email: userData.email });
+    if (existingUser) {
+      return {
+        status: 409,
+        message: "email is already in use",
+      };
+    }
+    const phoneExist = await User.findOne({ email: userData.phoneNumber });
+    if (phoneExist) {
+      return {
+        status: 409,
+        message: "Phone Number is already in use",
+      };
+    }
     if (!existingUser) {
       const response = await axios.post(
         "https://auth.otpless.app/auth/otp/v1/send",
@@ -32,11 +43,6 @@ export const signUp = async (userData) => {
         message: "OTP send Successful",
         data: response.data,
       };
-    } else {
-      return {
-        status: 409,
-        message: "User already exists",
-      };
     }
   } catch (err) {
     return {
@@ -48,7 +54,6 @@ export const signUp = async (userData) => {
 
 export const signIn = async (mobileNumber) => {
   try {
-    
     const existingAgent = await Agent.findOne({
       $or: [{ email: mobileNumber }, { phNum: mobileNumber }],
       status: true,
@@ -57,17 +62,15 @@ export const signIn = async (mobileNumber) => {
 
     if (existingAgent) {
       existingUser = await User.findOne({
-        _id: existingAgent.id
+        _id: existingAgent.id,
       });
     } else {
-      existingUser = await User.findOne({
-        $or: [{ email: mobileNumber }, { phoneNumber: mobileNumber }],
-      });
+      existingUser = await User.findOne({ phoneNumber: mobileNumber });
     }
     if (!existingUser) {
       return {
         status: 401,
-        message: "User not found",
+        message: "You are not signup, signup first",
       };
     }
     const response = await axios.post(
@@ -91,7 +94,6 @@ export const signIn = async (mobileNumber) => {
       data: response.data,
       message: "Signup Successfully",
     };
-
   } catch (err) {
     console.log(err);
     return {
@@ -172,7 +174,9 @@ export const facebookSignUp = async ({ name, email }) => {
 
 export const updateUserProfile = async (userId, updatedData) => {
   try {
-    const existingUser = await User.findByIdAndUpdate(userId, updatedData, { new: true });
+    const existingUser = await User.findByIdAndUpdate(userId, updatedData, {
+      new: true,
+    });
 
     if (!existingUser) {
       return {
